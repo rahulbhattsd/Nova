@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test": "echo 'No tests yet'"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "private": "true",
+  "name": "nova"
+}
