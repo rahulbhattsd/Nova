@@ -11,14 +11,14 @@ function App() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           {[
-            { label: 'Active Tasks', value: '3' },
-            { label: 'Completed Tasks', value: '127' },
-            { label: 'Success Rate', value: '91%' },
-            { label: 'Tool Executions', value: '4,831' }
+            { label: 'Active Tasks', value: '—' },
+            { label: 'Completed Tasks', value: '—' },
+            { label: 'Success Rate', value: '—' },
+            { label: 'Tool Executions', value: '—' }
           ].map((stat, i) => (
             <div key={i} className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm">
               <p className="text-sm font-medium text-muted-foreground mb-1">{stat.label}</p>
-              <h3 className="text-2xl font-bold">{stat.value}</h3>
+              <h3 className="text-2xl font-bold text-muted-foreground">{stat.value}</h3>
             </div>
           ))}
         </div>

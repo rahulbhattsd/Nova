@@ -3,12 +3,27 @@ import { hashPassword, verifyPassword } from '../security/password';
 import { prisma } from '@nova/database';
 
 export default async function (fastify: FastifyInstance) {
-  fastify.post('/register', async (request: FastifyRequest, reply: FastifyReply) => {
-    const { email, password } = request.body as any;
-
-    if (!email || !password) {
-      return reply.code(400).send({ error: 'Email and password are required' });
+  const authSchema = {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', minLength: 8 }
+        }
+      }
+    },
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 minute'
+      }
     }
+  };
+
+  fastify.post('/register', authSchema, async (request: FastifyRequest, reply: FastifyReply) => {
+    const { email, password } = request.body as any;
 
     try {
       const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -33,12 +48,8 @@ export default async function (fastify: FastifyInstance) {
     }
   });
 
-  fastify.post('/login', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/login', authSchema, async (request: FastifyRequest, reply: FastifyReply) => {
     const { email, password } = request.body as any;
-
-    if (!email || !password) {
-       return reply.code(400).send({ error: 'Email and password are required' });
-    }
 
     try {
       const user = await prisma.user.findUnique({ where: { email } });
