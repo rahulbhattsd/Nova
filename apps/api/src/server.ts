@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import authPlugin from './plugins/auth';
 import authRoutes from './routes/auth';
 
@@ -8,7 +9,12 @@ const server = Fastify({
   logger: true
 });
 
-server.register(cors);
+server.register(cors, {
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173'
+});
+server.register(rateLimit, {
+  global: false // We only want rate limiting on specific routes
+});
 server.register(authPlugin);
 
 server.register(authRoutes, { prefix: '/api/auth' });

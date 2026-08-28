@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts"
@@ -16,6 +16,7 @@
   "dependencies": {
     "@fastify/cors": "^11.3.0",
     "@fastify/jwt": "^10.2.2",
+    "@fastify/rate-limit": "^11.2.0",
     "@nova/database": "^1.0.0",
     "bcrypt": "^6.0.0",
     "fastify": "^5.12.1",
@@ -28,6 +29,7 @@
     "@types/node": "^26.4.0",
     "dotenv": "^17.4.2",
     "ts-node": "^10.9.2",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   }
 }

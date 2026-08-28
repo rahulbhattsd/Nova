@@ -1,11 +1,17 @@
 {
   "scripts": {
-    "test": "echo 'No tests yet'"
+    "test": "npm run test -w apps/api"
   },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "private": "true",
-  "name": "nova"
+  "name": "nova",
+  "devDependencies": {
+    "@types/supertest": "^7.2.1",
+    "@vitest/coverage-v8": "^4.1.11",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.11"
+  }
 }
