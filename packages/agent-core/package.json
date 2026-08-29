@@ -1,0 +1,14 @@
+{
+  "name": "@nova/agent-core",
+  "version": "1.0.0",
+  "description": "Agent core primitives",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
