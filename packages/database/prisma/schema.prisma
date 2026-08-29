@@ -14,6 +14,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   profile   UserProfile?
+  tasks     Task[]
 }
 
 model UserProfile {
@@ -33,4 +34,30 @@ model UsageRecord {
   outputTokens  Int
   estimatedCost Float
   createdAt     DateTime @default(now())
+}
+
+model Task {
+  id        String     @id @default(uuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  objective String
+  status    String     @default("PENDING") // Corresponds to TaskStatus enum
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  steps     TaskStep[]
+}
+
+model TaskStep {
+  id          String    @id @default(uuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  description String
+  status      String    @default("PENDING") // Corresponds to TaskStatus enum
+  order       Int
+  agentId     String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
