@@ -1,4 +1,5 @@
 import { Tool } from '@nova/agent-core';
+import { ExecutionContext } from '@nova/agent-core';
 import { z } from 'zod';
 import { PrismaClient } from '@nova/database';
 
@@ -22,14 +23,10 @@ export function createTool<T extends z.ZodTypeAny>(config: BaseToolConfig<T>): T
     inputSchema: config.schema,
     permissionLevel: config.permissionLevel,
     timeout: config.timeout,
-    execute: async (input: any) => {
+    execute: async (input: any, context?: ExecutionContext) => {
       const startTime = Date.now();
-      // Temporary extraction since `@nova/agent-core` doesn't pass it yet natively in this phase.
-      // We accept it from the test/callers via an implicit pattern, or default to null.
-      const taskId = input?._taskId || null;
-      if (input && typeof input === 'object' && '_taskId' in input) {
-         delete input._taskId;
-      }
+
+      const taskId = context?.taskId || null;
       let output: any = null;
       let errorStr: string | null = null;
       let status: string = 'SUCCESS';

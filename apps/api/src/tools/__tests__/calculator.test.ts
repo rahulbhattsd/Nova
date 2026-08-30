@@ -21,7 +21,8 @@ describe('Calculator Tool', () => {
 
   it('should evaluate a valid expression', async () => {
     const input = { expression: '2 + 2 * 3' };
-    const result = await calculatorTool.execute(input);
+    const context = { taskId: 'test-task-123' };
+    const result = await calculatorTool.execute(input, context);
     expect(result).toEqual({ result: 8 });
 
     // Verify logging
@@ -30,6 +31,7 @@ describe('Calculator Tool', () => {
     expect(logs[0].status).toBe('SUCCESS');
     expect(logs[0].output).toEqual({ result: 8 });
     expect(logs[0].input).toEqual(input);
+    expect(logs[0].taskId).toEqual('test-task-123');
   });
 
   it('should handle division by zero', async () => {

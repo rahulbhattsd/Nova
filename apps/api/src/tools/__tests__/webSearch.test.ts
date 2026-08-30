@@ -28,7 +28,8 @@ describe('Web Search Tool', () => {
     _setSearchProvider(mockProvider);
 
     const input = { query: 'test query', maxResults: 2 };
-    const result = await webSearchTool.execute(input);
+    const context = { taskId: 'test-task-123' };
+    const result = await webSearchTool.execute(input, context);
 
     expect(result.results).toHaveLength(2);
     expect(result.results[0].title).toBe('Mock Result 1 for test query');
@@ -39,6 +40,7 @@ describe('Web Search Tool', () => {
     expect(logs[0].status).toBe('SUCCESS');
     expect(logs[0].input).toEqual(input);
     expect(logs[0].output).toBeDefined();
+    expect(logs[0].taskId).toEqual('test-task-123');
   });
 
   it('should return "not configured" error when API key is missing', async () => {
