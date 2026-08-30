@@ -25,7 +25,7 @@ export interface Tool {
   name: string;
   description: string;
   inputSchema: any; // Type to be defined later, perhaps JSON Schema
-  execute: (input: any) => Promise<any>;
+  execute: (input: any, context?: ExecutionContext) => Promise<any>;
   permissionLevel: 'READ' | 'WRITE' | 'EXECUTE' | 'EXTERNAL_ACTION';
   timeout?: number; // in milliseconds
 }

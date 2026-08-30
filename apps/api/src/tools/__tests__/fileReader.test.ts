@@ -35,7 +35,8 @@ describe('File Reader Tool', () => {
 
   it('should read a valid file inside the workspace directory', async () => {
     const input = { filepath: TEST_FILE };
-    const result = await fileReaderTool.execute(input);
+    const context = { taskId: 'test-task-123' };
+    const result = await fileReaderTool.execute(input, context);
     expect(result).toEqual({ content: 'Hello World!' });
 
     // Verify logging
@@ -44,6 +45,7 @@ describe('File Reader Tool', () => {
     expect(logs[0].status).toBe('SUCCESS');
     expect(logs[0].output).toEqual({ content: 'Hello World!' });
     expect(logs[0].input).toEqual(input);
+    expect(logs[0].taskId).toEqual('test-task-123');
   });
 
   it('should reject a path traversal attempt', async () => {
