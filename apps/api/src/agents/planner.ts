@@ -1,5 +1,6 @@
 import { LLMProvider } from '../llm/interfaces';
 import { Agent, TaskStep, TaskStatus } from '@nova/agent-core';
+import { searchSimilarMemories } from '../services/memory';
 
 export interface PlanStep {
   description: string;
@@ -21,9 +22,27 @@ export class PlannerAgent implements Agent {
 
   constructor(private llmProvider: LLMProvider) {}
 
-  async plan(objective: string): Promise<PlannerOutput> {
+  async plan(objective: string, userId?: string): Promise<PlannerOutput> {
+    let systemPrompt = this.systemInstructions;
+
+    if (userId) {
+      const objectiveEmbedding = await this.llmProvider.embed(objective);
+
+      const semanticMemories = await searchSimilarMemories(userId, objectiveEmbedding, 3, 'SEMANTIC');
+      const episodicMemories = await searchSimilarMemories(userId, objectiveEmbedding, 3, 'EPISODIC');
+
+      const allMemories = [...semanticMemories, ...episodicMemories];
+
+      if (allMemories.length > 0) {
+        systemPrompt += '\n\nRelevant Context:\n';
+        for (const mem of allMemories) {
+          systemPrompt += `- ${mem.content}\n`;
+        }
+      }
+    }
+
     const messages = [
-      { role: 'system' as const, content: this.systemInstructions },
+      { role: 'system' as const, content: systemPrompt },
       { role: 'user' as const, content: `Objective: ${objective}` }
     ];
 

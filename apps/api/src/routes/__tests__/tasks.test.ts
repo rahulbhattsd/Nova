@@ -21,7 +21,8 @@ vi.mock('../../llm/index', () => {
       completeStructured: vi.fn().mockResolvedValue({
         parsed: { plan: [{ description: 'Test Step 1', order: 1 }] },
         model: 'mock', inputTokens: 10, outputTokens: 10
-      })
+      }),
+      embed: vi.fn().mockResolvedValue(new Array(1536).fill(0))
     }))
   };
 });
@@ -35,6 +36,7 @@ describe('Task API Routes', () => {
 
   beforeEach(async () => {
     app = Fastify();
+    process.env.AUTH_SECRET = 'test-secret';
     await app.register(authPlugin);
     await app.register(taskRoutes, { prefix: '/api/tasks' });
 

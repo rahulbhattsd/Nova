@@ -21,7 +21,7 @@ describe('Calculator Tool', () => {
 
   it('should evaluate a valid expression', async () => {
     const input = { expression: '2 + 2 * 3' };
-    const context = { taskId: 'test-task-123' };
+    const context = { taskId: 'test-task-123', userId: 'test-user', budget: 10, retries: 0, maxRetries: 3 };
     const result = await calculatorTool.execute(input, context);
     expect(result).toEqual({ result: 8 });
 

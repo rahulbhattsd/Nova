@@ -139,4 +139,27 @@ export class OpenAIProvider implements LLMProvider {
       await this.recordUsage(model, inputTokens, outputTokens);
     }
   }
+
+  async embed(text: string): Promise<number[]> {
+    const model = 'text-embedding-3-small';
+    const response = await this.client.embeddings.create({
+      model,
+      input: text
+    });
+
+    const inputTokens = response.usage.prompt_tokens;
+    // basic cost estimation for embeddings: very cheap, e.g. $0.02 / 1M tokens
+    const estimatedCost = (inputTokens / 1_000_000) * 0.02;
+
+    await prisma.usageRecord.create({
+      data: {
+        model,
+        inputTokens,
+        outputTokens: 0,
+        estimatedCost,
+      },
+    });
+
+    return response.data[0].embedding;
+  }
 }
