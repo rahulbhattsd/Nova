@@ -25,15 +25,13 @@ describe('Auth Routes', () => {
     await server.ready();
 
     // Clean up any existing test user
-    await prisma.user.deleteMany({
-      where: { email: { in: ['test@example.com', 'test-login@example.com'] } }
-    });
+    await prisma.$executeRaw`DELETE FROM "Memory"`;
+    await prisma.$executeRaw`DELETE FROM "User" CASCADE`;
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({
-      where: { email: { in: ['test@example.com', 'test-login@example.com'] } }
-    });
+    await prisma.$executeRaw`DELETE FROM "Memory"`;
+    await prisma.$executeRaw`DELETE FROM "User" CASCADE`;
     await server.close();
   });
 

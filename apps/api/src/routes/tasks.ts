@@ -23,7 +23,7 @@ export default async function (fastify: FastifyInstance) {
     // 1. Create Task in PENDING state
     const task = await prisma.task.create({
       data: {
-        userId: request.user.id,
+        userId: (request.user as any).id,
         objective,
         status: TaskStatus.PENDING
       }
@@ -37,7 +37,7 @@ export default async function (fastify: FastifyInstance) {
       });
 
       // 2. Call PlannerAgent to get plan
-      const planOutput = await plannerAgent.plan(objective);
+      const planOutput = await plannerAgent.plan(objective, (request.user as any).id);
 
       // 3. Create TaskSteps
       const stepData = planOutput.plan.map(step => ({
@@ -77,7 +77,7 @@ export default async function (fastify: FastifyInstance) {
 
   fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
     const tasks = await prisma.task.findMany({
-      where: { userId: request.user.id },
+      where: { userId: (request.user as any).id },
       orderBy: { createdAt: 'desc' }
     });
     return reply.send(tasks);
@@ -96,7 +96,7 @@ export default async function (fastify: FastifyInstance) {
     }
 
     // Ownership check (NOVA_SPEC.md §36)
-    if (task.userId !== request.user.id) {
+    if (task.userId !== (request.user as any).id) {
       return reply.code(403).send({ error: 'Access denied' });
     }
 
@@ -114,7 +114,7 @@ export default async function (fastify: FastifyInstance) {
       return reply.code(404).send({ error: 'Task not found' });
     }
 
-    if (task.userId !== request.user.id) {
+    if (task.userId !== (request.user as any).id) {
       return reply.code(403).send({ error: 'Access denied' });
     }
 

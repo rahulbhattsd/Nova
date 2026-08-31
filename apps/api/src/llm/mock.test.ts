@@ -31,4 +31,25 @@ describe('MockProvider', () => {
     }
     expect(chunks.join('')).toBe('This is a streaming mock response.');
   });
+
+  it('should generate a deterministic vector of length 1536', async () => {
+    const provider = new MockProvider();
+    const text1 = 'hello world';
+    const text2 = 'hello world';
+    const text3 = 'different text';
+
+    const vector1 = await provider.embed(text1);
+    const vector2 = await provider.embed(text2);
+    const vector3 = await provider.embed(text3);
+
+    expect(vector1).toHaveLength(1536);
+    expect(vector2).toHaveLength(1536);
+    expect(vector3).toHaveLength(1536);
+
+    // Deterministic check
+    expect(vector1).toEqual(vector2);
+
+    // Different strings should yield different vectors (unless there's a highly unlikely collision)
+    expect(vector1).not.toEqual(vector3);
+  });
 });

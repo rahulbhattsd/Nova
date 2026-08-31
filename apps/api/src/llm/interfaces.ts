@@ -48,4 +48,9 @@ export interface LLMProvider {
    * Send a message and get a streaming response
    */
   stream(messages: LLMMessage[], options?: LLMCompletionOptions): AsyncGenerator<string, void, unknown>;
+
+  /**
+   * Embed text into a vector
+   */
+  embed(text: string): Promise<number[]>;
 }

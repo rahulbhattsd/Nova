@@ -2,6 +2,7 @@ import { PrismaClient } from '@nova/database';
 import { TaskStatus, ExecutionContext } from '@nova/agent-core';
 import { registry } from '../tools/registry';
 import { createLLMProvider } from '../llm';
+import { storeMemory } from '../services/memory';
 
 const prisma = new PrismaClient();
 
@@ -38,6 +39,8 @@ export async function executeTask(taskId: string) {
       retries: 0,
       maxRetries
     };
+
+    const taskHistory: string[] = [];
 
     for (const step of task.steps) {
       if (context.budget <= 0) {
@@ -79,8 +82,13 @@ export async function executeTask(taskId: string) {
              additionalProperties: false
           };
 
+          let systemPrompt = 'You are an orchestrator agent. Select the best tool and determine its input to accomplish the user\'s task step. Available tools:\n' + availableTools.map(t => `- ${t.name}: ${t.description}`).join('\n');
+          if (taskHistory.length > 0) {
+            systemPrompt += '\n\nPrevious steps context:\n' + taskHistory.join('\n');
+          }
+
           const messages = [
-            { role: 'system' as const, content: 'You are an orchestrator agent. Select the best tool and determine its input to accomplish the user\'s task step. Available tools:\n' + availableTools.map(t => `- ${t.name}: ${t.description}`).join('\n') },
+            { role: 'system' as const, content: systemPrompt },
             { role: 'user' as const, content: `Task Step: ${step.description}` }
           ];
 
@@ -112,6 +120,8 @@ export async function executeTask(taskId: string) {
             data: { status: TaskStatus.COMPLETED, completedAt: new Date() }
           });
 
+          taskHistory.push(`Step: ${step.description} - Result: Success - Output: ${JSON.stringify(result?.output || {})}`);
+
           stepSuccess = true;
           break; // Break retry loop
 
@@ -124,6 +134,7 @@ export async function executeTask(taskId: string) {
                  where: { id: step.id },
                  data: { status: TaskStatus.FAILED, error: err.message || String(err), completedAt: new Date() }
               });
+              taskHistory.push(`Step: ${step.description} - Result: Failed - Error: ${err.message || String(err)}`);
               break; // Break retry loop, step failed
            } else {
               await prisma.taskStep.update({
@@ -141,6 +152,11 @@ export async function executeTask(taskId: string) {
            where: { id: taskId },
            data: { status: TaskStatus.FAILED }
          });
+
+         const outcome = `User previously attempted ${task.objective} - result: FAILED. Steps taken: ${taskHistory.join('; ')}`;
+         const embedding = await llm.embed(outcome);
+         await storeMemory(task.userId, 'EPISODIC', outcome, embedding, task.id);
+
          return;
       }
     }
@@ -152,6 +168,10 @@ export async function executeTask(taskId: string) {
        where: { id: taskId },
        data: { status: TaskStatus.COMPLETED }
     });
+
+    const outcome = `User previously attempted ${task.objective} - result: COMPLETED. Steps taken: ${taskHistory.join('; ')}`;
+    const embedding = await llm.embed(outcome);
+    await storeMemory(task.userId, 'EPISODIC', outcome, embedding, task.id);
 
   } catch (error) {
      console.error(`Orchestrator error for task ${taskId}:`, error);

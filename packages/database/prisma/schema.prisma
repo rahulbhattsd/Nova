@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model User {
@@ -15,6 +17,7 @@ model User {
   updatedAt DateTime @updatedAt
   profile   UserProfile?
   tasks     Task[]
+  memories  Memory[]
 }
 
 model UserProfile {
@@ -72,4 +75,15 @@ model ToolExecution {
   duration  Int
   taskId    String?
   timestamp DateTime @default(now())
+}
+
+model Memory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // 'EPISODIC' | 'SEMANTIC'
+  content   String
+  embedding Unsupported("vector(1536)")
+  taskId    String?
+  createdAt DateTime @default(now())
 }

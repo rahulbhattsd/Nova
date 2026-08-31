@@ -29,10 +29,11 @@ describe('Orchestrator Execution', () => {
     registry.register(fileReaderTool);
     registry.register(webSearchTool);
 
+    await prisma.$executeRaw`DELETE FROM "Memory"`;
     await prisma.toolExecution.deleteMany();
     await prisma.taskStep.deleteMany();
     await prisma.task.deleteMany();
-    await prisma.user.deleteMany();
+    await prisma.$executeRaw`DELETE FROM "User" CASCADE`;
 
     user = await prisma.user.create({
       data: {
@@ -43,10 +44,11 @@ describe('Orchestrator Execution', () => {
   });
 
   afterEach(async () => {
+    await prisma.$executeRaw`DELETE FROM "Memory"`;
     await prisma.toolExecution.deleteMany();
     await prisma.taskStep.deleteMany();
     await prisma.task.deleteMany();
-    await prisma.user.deleteMany();
+    await prisma.$executeRaw`DELETE FROM "User" CASCADE`;
     vi.clearAllMocks();
   });
 
@@ -65,7 +67,8 @@ describe('Orchestrator Execution', () => {
     vi.mocked(llmProvider.createLLMProvider).mockReturnValue({
       complete: vi.fn(),
       completeStructured: mockCompleteStructured as any,
-      stream: vi.fn() as any
+      stream: vi.fn() as any,
+      embed: vi.fn().mockResolvedValue(new Array(1536).fill(0.5)) as any
     });
 
     const task = await prisma.task.create({
@@ -96,6 +99,13 @@ describe('Orchestrator Execution', () => {
     expect(updatedTask?.steps[1].status).toBe(TaskStatus.COMPLETED);
     expect(updatedTask?.steps[1].completedAt).toBeDefined();
     expect(mockCompleteStructured).toHaveBeenCalledTimes(2);
+
+    // Verify task context history is passed to the LLM on the second step
+    const secondCallArgs = mockCompleteStructured.mock.calls[1];
+    const secondCallMessages = secondCallArgs[0];
+    const systemMessage = secondCallMessages.find((m: any) => m.role === 'system');
+    expect(systemMessage?.content).toContain('Previous steps context:');
+    expect(systemMessage?.content).toContain('Step 1 - Result: Success');
   });
 
   it('should fail task and step when maxRetries is reached', async () => {
@@ -111,7 +121,8 @@ describe('Orchestrator Execution', () => {
     vi.mocked(llmProvider.createLLMProvider).mockReturnValue({
       complete: vi.fn(),
       completeStructured: mockCompleteStructured as any,
-      stream: vi.fn() as any
+      stream: vi.fn() as any,
+      embed: vi.fn().mockResolvedValue(new Array(1536).fill(0.5)) as any
     });
 
     const task = await prisma.task.create({

@@ -35,4 +35,17 @@ export class MockProvider implements LLMProvider {
       // Optional: add a tiny delay to simulate network latency if needed, but omitted for faster tests.
     }
   }
+
+  async embed(text: string): Promise<number[]> {
+    // Generate a deterministic mock vector of length 1536 based on string content
+    const vector = new Array(1536).fill(0);
+    for (let i = 0; i < text.length; i++) {
+      const val = text.charCodeAt(i) / 255.0;
+      vector[i % 1536] = (vector[i % 1536] + val) / 2.0;
+    }
+
+    // Normalize mock vector
+    const magnitude = Math.sqrt(vector.reduce((sum, v) => sum + v * v, 0)) || 1;
+    return vector.map(v => v / magnitude);
+  }
 }

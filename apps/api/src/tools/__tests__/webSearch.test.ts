@@ -28,7 +28,7 @@ describe('Web Search Tool', () => {
     _setSearchProvider(mockProvider);
 
     const input = { query: 'test query', maxResults: 2 };
-    const context = { taskId: 'test-task-123' };
+    const context = { taskId: 'test-task-123', userId: 'test-user', budget: 10, retries: 0, maxRetries: 3 };
     const result = await webSearchTool.execute(input, context);
 
     expect(result.results).toHaveLength(2);

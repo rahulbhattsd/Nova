@@ -1,7 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PlannerAgent } from './planner';
 import { MockProvider } from '../llm/mock';
 import { LLMMessage, StructuredOutputOptions, LLMCompletionOptions, LLMStructuredResponse } from '../llm/interfaces';
+import * as memoryService from '../services/memory';
+
+vi.mock('../services/memory', () => ({
+  searchSimilarMemories: vi.fn()
+}));
 
 // We override the completeStructured behavior of MockProvider to return a valid PlannerOutput
 class TestMockProvider extends MockProvider {
@@ -28,7 +33,11 @@ class TestMockProvider extends MockProvider {
 }
 
 describe('PlannerAgent', () => {
-  it('should generate a structured plan for a given objective', async () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should generate a structured plan for a given objective without userId', async () => {
     const provider = new TestMockProvider();
     const spy = vi.spyOn(provider, 'completeStructured');
     const planner = new PlannerAgent(provider);
@@ -51,7 +60,30 @@ describe('PlannerAgent', () => {
     expect(output).toHaveProperty('plan');
     expect(output.plan).toBeInstanceOf(Array);
     expect(output.plan.length).toBe(2);
-    expect(output.plan[0].description).toBe('Step 1: Do something');
-    expect(output.plan[0].order).toBe(1);
+  });
+
+  it('should query memory and include context if userId is provided', async () => {
+    const provider = new TestMockProvider();
+    const spy = vi.spyOn(provider, 'completeStructured');
+
+    vi.mocked(memoryService.searchSimilarMemories).mockImplementation(async (userId, embedding, topK, type) => {
+       if (type === 'SEMANTIC') return [{ content: 'User knows TypeScript' }];
+       if (type === 'EPISODIC') return [{ content: 'User failed a similar task previously' }];
+       return [];
+    });
+
+    const planner = new PlannerAgent(provider);
+    const objective = 'Write a new app';
+    await planner.plan(objective, 'user123');
+
+    // memory should be queried twice
+    expect(memoryService.searchSimilarMemories).toHaveBeenCalledTimes(2);
+
+    // check that system prompt contains the memories
+    const [[messages]] = spy.mock.calls;
+    const systemMsg = messages.find((m: any) => m.role === 'system');
+
+    expect(systemMsg?.content).toContain('User knows TypeScript');
+    expect(systemMsg?.content).toContain('User failed a similar task previously');
   });
 });

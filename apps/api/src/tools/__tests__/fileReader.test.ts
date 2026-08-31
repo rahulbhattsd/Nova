@@ -35,7 +35,7 @@ describe('File Reader Tool', () => {
 
   it('should read a valid file inside the workspace directory', async () => {
     const input = { filepath: TEST_FILE };
-    const context = { taskId: 'test-task-123' };
+    const context = { taskId: 'test-task-123', userId: 'test-user', budget: 10, retries: 0, maxRetries: 3 };
     const result = await fileReaderTool.execute(input, context);
     expect(result).toEqual({ content: 'Hello World!' });
 
